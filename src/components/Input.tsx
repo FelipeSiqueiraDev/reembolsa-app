@@ -1,9 +1,15 @@
 import { ComponentProps } from "react";
-import { Input as GluestackInput, InputField } from "@gluestack-ui/themed";
+import {
+  Input as GluestackInput,
+  InputField,
+  Text,
+} from "@gluestack-ui/themed";
 
-type Props = ComponentProps<typeof InputField>;
+type Props = ComponentProps<typeof InputField> & {
+  errorMessage?: string;
+};
 
-export function Input({ ...rest }: Props) {
+export function Input({ errorMessage, ...rest }: Props) {
   return (
     <GluestackInput
       h={"$14"}
@@ -18,6 +24,12 @@ export function Input({ ...rest }: Props) {
       }}
     >
       <InputField color={"$gray100"} {...rest} />
+
+      {errorMessage && (
+        <Text color={"$red500"} fontSize={"$sm"} mb={"$4"}>
+          {errorMessage}
+        </Text>
+      )}
     </GluestackInput>
   );
 }
