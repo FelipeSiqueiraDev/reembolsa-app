@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Text,
   HStack,
   VStack,
-  Select,
   ScrollView,
   KeyboardAvoidingView,
 } from "@gluestack-ui/themed";
@@ -11,6 +10,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 
 import * as yup from "yup";
+import { Picker } from "@react-native-picker/picker";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 
@@ -18,6 +18,10 @@ import { Input } from "@components/Input";
 import { Header } from "@components/Header";
 import { Button } from "@components/Button";
 import { FilterButton } from "@components/FilterButton";
+
+import { api } from "@services/api";
+import { departamentDTO } from "@dtos/departamentDTO";
+import { companiesDTO } from "@dtos/companiesDTO";
 
 const ReimbusementSchema = yup.object({
   cpf: yup.string().required("CPF é obrigatório"),
@@ -39,12 +43,8 @@ type ReimbusementProps = {
 
 export function CreateReimbusement() {
   const [selectedType, setSelectedType] = useState<string>("");
-  const [companies, setCompanies] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
-  const [departaments, setDepartaments] = useState<
-    Array<{ id: string; name: string }>
-  >([]);
+  const [companies, setCompanies] = useState<companiesDTO[]>([]);
+  const [departaments, setDepartaments] = useState<departamentDTO[]>([]);
 
   const {
     control,
@@ -52,10 +52,78 @@ export function CreateReimbusement() {
     formState: { errors },
   } = useForm<ReimbusementProps>({ resolver: yupResolver(ReimbusementSchema) });
 
-  function sendReimbusementRequest(data: ReimbusementProps) {
-    console.log("Oi");
-    console.log(data);
+  async function getCompanies() {
+    try {
+      const settings = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const {
+        data: { Entities },
+      } = await api("/Services/Default/Empresa/List", settings);
+      sendReimbusementRequest;
+      setCompanies(Entities);
+    } catch (err) {
+      console.log("Erro ao buscar as empresas.");
+    }
   }
+  async function getSections() {
+    try {
+      const settings = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+      const {
+        data: { Entities },
+      } = await api("/Services/Default/CentroCusto/List", settings);
+      setDepartaments(Entities);
+    } catch (err) {
+      console.log("Erro ao buscar as departaments.");
+    }
+  }
+
+  async function sendReimbusementRequest(data: ReimbusementProps) {
+    const reimbusementData = {
+      Nome: data.name,
+      Cpf: data.cpf,
+      Telefone: data.phoneNumber,
+      Motivo: data.reason,
+      EmpresaId: data.company,
+      CentroCustoId: data.departament,
+      Tipo: selectedType,
+    };
+
+    try {
+      const settings = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: reimbusementData,
+      };
+
+      const { data } = await api(
+        "/Services/Default/Reembolso/Create",
+        settings
+      );
+
+      console.log(data);
+    } catch (err) {
+      console.log(err);
+    }
+
+    console.log(reimbusementData);
+  }
+
+  useEffect(() => {
+    getCompanies();
+    getSections();
+  }, []);
 
   return (
     <KeyboardAvoidingView flex={1} px={"$12"} py={"$4"} bg={"$gray500"}>
@@ -150,7 +218,7 @@ export function CreateReimbusement() {
                   </Text>
                   <Input
                     placeholder="Telefone"
-                    keyboardType="default"
+                    keyboardType="numeric"
                     value={value}
                     onChangeText={onChange}
                     errorMessage={errors.phoneNumber?.message}
@@ -158,6 +226,7 @@ export function CreateReimbusement() {
                 </>
               )}
             />
+
             <Controller
               control={control}
               name={"company"}
@@ -166,19 +235,31 @@ export function CreateReimbusement() {
                   <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
                     Empresa:
                   </Text>
-                  <Select
+                  <Picker
                     selectedValue={value}
                     onValueChange={onChange}
-                    placeholder="Selecione uma empresa"
+                    style={{
+                      color: "white",
+                      backgroundColor: "#121214",
+                      marginBottom: 20,
+                    }}
                   >
-                    {companies.map((company) => (
-                      <Select.Item
-                        key={company.id}
-                        label={company.name}
-                        value={company.id}
+                    <Picker.Item label="Selecione uma empresa" value="" />
+                    {Array.isArray(companies) && companies.length > 0 ? (
+                      companies.map((company) => (
+                        <Picker.Item
+                          key={company.Id}
+                          label={company.Nome}
+                          value={company.Id}
+                        />
+                      ))
+                    ) : (
+                      <Picker.Item
+                        label="Nenhuma empresa disponível"
+                        value=""
                       />
-                    ))}
-                  </Select>
+                    )}
+                  </Picker>
                   {errors.company && (
                     <Text color={"$red500"} ml={"$2"}>
                       {errors.company?.message}
@@ -196,19 +277,30 @@ export function CreateReimbusement() {
                   <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
                     Departamento:
                   </Text>
-                  <Select
+                  <Picker
                     selectedValue={value}
                     onValueChange={onChange}
-                    placeholder="Selecione um departamento"
+                    style={{
+                      color: "white",
+                      backgroundColor: "#121214",
+                    }}
                   >
-                    {departaments.map((departament) => (
-                      <Select.Item
-                        key={departament.id}
-                        label={departament.name}
-                        value={departament.id}
+                    <Picker.Item label="Selecione um departamento" value="" />
+                    {Array.isArray(departaments) && departaments.length > 0 ? (
+                      departaments.map((departament) => (
+                        <Picker.Item
+                          key={departament.CentroCustoId}
+                          label={departament.Nome}
+                          value={departament.CentroCustoId}
+                        />
+                      ))
+                    ) : (
+                      <Picker.Item
+                        label="Nenhum departamento disponível"
+                        value=""
                       />
-                    ))}
-                  </Select>
+                    )}
+                  </Picker>
                   {errors.departament && (
                     <Text color={"$red500"} ml={"$2"}>
                       {errors.departament?.message}
@@ -239,7 +331,7 @@ export function CreateReimbusement() {
                   </Text>
                   <Input
                     placeholder="Motivo"
-                    keyboardType="numeric"
+                    keyboardType="default"
                     value={value}
                     onChangeText={onChange}
                     errorMessage={errors.reason?.message}
