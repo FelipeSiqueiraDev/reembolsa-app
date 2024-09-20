@@ -35,8 +35,6 @@ const ReimbusementSchema = yup.object({
   company: yup.string().required("Empresa é obrigatório"),
   departament: yup.string().required("Departamento é obrigatório"),
   reason: yup.string().required("Motivo é obrigatório"),
-  origin: yup.string().notRequired(),
-  destination: yup.string().notRequired(),
 });
 
 type ReimbusementProps = {
