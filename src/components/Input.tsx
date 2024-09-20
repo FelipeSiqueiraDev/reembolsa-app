@@ -1,4 +1,4 @@
-import { ComponentProps } from "react";
+import { ComponentProps, useState } from "react";
 import {
   Input as GluestackInput,
   InputField,
@@ -7,9 +7,29 @@ import {
 
 type Props = ComponentProps<typeof InputField> & {
   errorMessage?: string;
+  editStyle?: "default" | "cpf";
 };
 
-export function Input({ errorMessage, ...rest }: Props) {
+const formatCPF = (value: string) => {
+  return value
+    .replace(/\D/g, "")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})/, "$1-$2")
+    .replace(/(-\d{2})\d+?$/, "$1");
+};
+
+export function Input({ errorMessage, editStyle = "default", ...rest }: Props) {
+  const [value, setValue] = useState("");
+
+  const handleChange = (text: string) => {
+    if (editStyle === "cpf") {
+      setValue(formatCPF(text));
+    } else {
+      setValue(text);
+    }
+  };
+
   return (
     <GluestackInput
       h={"$14"}
@@ -23,7 +43,12 @@ export function Input({ errorMessage, ...rest }: Props) {
         borderColor: "$green500",
       }}
     >
-      <InputField color={"$gray100"} {...rest} />
+      <InputField
+        color={"$gray100"}
+        value={value}
+        onChangeText={handleChange}
+        {...rest}
+      />
 
       {errorMessage && (
         <Text color={"$red500"} fontSize={"$sm"} mb={"$4"}>

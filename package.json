@@ -25,6 +25,7 @@
     "expo-secure-store": "^13.0.2",
     "expo-status-bar": "~1.12.1",
     "install": "^0.13.0",
+    "lodash": "^4.17.21",
     "npx": "^10.2.2",
     "react": "18.2.0",
     "react-hook-form": "^7.53.0",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/lodash": "^4.17.7",
     "@types/react": "~18.2.45",
     "react-native-svg-transformer": "^1.5.0",
     "typescript": "^5.1.3"
