@@ -5,6 +5,7 @@ import { Input } from "@components/Input";
 import {
   Center,
   Heading,
+  HStack,
   KeyboardAvoidingView,
   ScrollView,
 } from "@gluestack-ui/themed";
@@ -86,14 +87,14 @@ export function SignIn() {
             name={"password"}
             render={({ field: { onChange, value } }) => (
               <Input
-                placeholder={"Senha"}
-                keyboardType={"default"}
-                autoCapitalize={"none"}
                 value={value}
-                onChangeText={onChange}
-                secureTextEntry={true}
-                onSubmitEditing={handleSubmit(handleSignIn)}
                 returnKeyType="send"
+                placeholder={"Senha"}
+                editStyle={"password"}
+                autoCapitalize={"none"}
+                onChangeText={onChange}
+                keyboardType={"default"}
+                onSubmitEditing={handleSubmit(handleSignIn)}
               />
             )}
           />

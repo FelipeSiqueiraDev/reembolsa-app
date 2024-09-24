@@ -15,7 +15,7 @@ import { Picker } from "@react-native-picker/picker";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { AppNavigatorRoutesProps } from "@routes/app.routes";
 
 import { Input } from "@components/Input";
@@ -87,8 +87,6 @@ export function CreateReimbusement() {
       const {
         data: { Entity },
       } = await api("/Services/Default/Reembolso/VerificarPessoa", settings);
-
-      console.log(Entity);
 
       setValue("name", Entity.Nome);
       setValue("phoneNumber", Entity.Telefone);

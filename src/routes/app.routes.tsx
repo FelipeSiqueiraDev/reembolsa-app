@@ -4,6 +4,7 @@ import {
 } from "@react-navigation/bottom-tabs";
 import { AddReimbusementItem } from "@screens/AddReimbusementItem";
 import { CreateReimbusement } from "@screens/CreateReimbusement";
+import { CreateReimbusementItem } from "@screens/CreateReimbusementItem";
 
 import { Home } from "@screens/Home";
 
@@ -11,6 +12,7 @@ type AppRoutes = {
   home: undefined;
   createReimbusement: undefined;
   addReimbusementItem: { EntityId: number };
+  createReimbusementItem: undefined;
 };
 
 export type AppNavigatorRoutesProps = BottomTabNavigationProp<AppRoutes>;
@@ -44,6 +46,14 @@ export function AppRoutes() {
       <Screen
         name={"addReimbusementItem"}
         component={AddReimbusementItem}
+        options={{
+          tabBarStyle: { display: "none" },
+        }}
+      />
+
+      <Screen
+        name={"createReimbusementItem"}
+        component={CreateReimbusementItem}
         options={{
           tabBarStyle: { display: "none" },
         }}
