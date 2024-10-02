@@ -8,6 +8,6 @@ type ApiInstanceProps = AxiosInstance & {
 
 export const api = axios.create({
   // baseURL: "https://gestao.faridnet.com.br/",
-  baseURL: "http://192.168.89.100:51044/",
+  baseURL: "http://192.168.1.124:51044/",
   timeout: 10000,
 }) as ApiInstanceProps;

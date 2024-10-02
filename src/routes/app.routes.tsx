@@ -12,7 +12,7 @@ type AppRoutes = {
   home: undefined;
   createReimbusement: undefined;
   addReimbusementItem: { EntityId: number };
-  createReimbusementItem: undefined;
+  createReimbusementItem: { EntityId: number };
 };
 
 export type AppNavigatorRoutesProps = BottomTabNavigationProp<AppRoutes>;

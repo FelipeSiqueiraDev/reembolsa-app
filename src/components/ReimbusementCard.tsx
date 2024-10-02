@@ -1,7 +1,5 @@
 import { Heading, HStack, Pressable, View, VStack } from "@gluestack-ui/themed";
-
 import { reimbusementDTO } from "@dtos/reimbusementDTO";
-
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@gluestack-ui/themed";
 
@@ -11,7 +9,8 @@ type ReimbusementCardProps = {
 
 export function ReimbusementCard({ data }: ReimbusementCardProps) {
   const reimbursementAmount = () => {
-    if (data.ReembolsoItemList.length === 0) return "0,00";
+    if (!data.ReembolsoItemList || data.ReembolsoItemList.length === 0)
+      return "0,00";
     return data.ReembolsoItemList.reduce(
       (amount, item) => amount + item.ValorSolicitado,
       0
@@ -21,11 +20,19 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
   };
 
   return (
-    <Pressable w={"$full"} h={"$32"} bg={"$gray400"} px={"$4"} rounded={"$lg"}>
+    <Pressable
+      w={"$full"}
+      h={"$32"}
+      bg={"$gray400"}
+      px={"$4"}
+      my={"$2"}
+      rounded={"$lg"}
+      onPress={() => console.log("CLICK NO PRODUTO")}
+    >
       <View
         h={"$full"}
         w={"$2"}
-        bg={"$red500"}
+        bg={"$cyan500"}
         position="absolute"
         top={0}
         left={0}
@@ -56,11 +63,13 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
         <HStack alignItems={"center"}>
           <Ionicons name={"link"} size={18} color={"#C4C4CC"} />
           <Text color={"$gray300"} ml={"$1"} fontWeight={"$black"}>
-            {data.ReembolsoItemList.length}
+            {data.ReembolsoItemList?.length || 0}
           </Text>
         </HStack>
-        
       </HStack>
+      <Text fontSize={"$sm"} marginTop={"$2.5"}>
+        Criado em {new Date(data.InsertDate).toLocaleDateString("pt-br")}
+      </Text>
     </Pressable>
   );
 }

@@ -1,6 +1,4 @@
-import { useState } from "react";
 import { HStack } from "@gluestack-ui/themed";
-
 import { FilterButton } from "./FilterButton";
 
 type FilterItem = {
@@ -8,19 +6,12 @@ type FilterItem = {
   name: string;
 };
 
-const filterList: FilterItem[] = [
-  { id: 1, name: "Simples" },
-  { id: 2, name: "Viagem" },
-];
+type FiltersProps = {
+  selectedFilter: string | null;
+  setSelectedFilter: (filter: string | null) => void;
+};
 
-export function Filters() {
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-
-  // Função para aplicar o filtro
-  const filteredList = selectedFilter
-    ? filterList.filter((item) => item.name === selectedFilter)
-    : filterList;
-
+export function Filters({ selectedFilter, setSelectedFilter }: FiltersProps) {
   return (
     <HStack
       h={"$12"}

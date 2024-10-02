@@ -19,6 +19,7 @@ import { Controller, useForm } from "react-hook-form";
 
 import { temporaryUpload } from "@services/temporaryUpload";
 import * as ImagePicker from "expo-image-picker";
+import { useRoute } from "@react-navigation/native";
 
 import { typesDTO } from "@dtos/typesDTOP";
 
@@ -43,6 +44,9 @@ type ReimbusementItemProps = {
 };
 
 export function CreateReimbusementItem() {
+  const route = useRoute();
+  const { EntityId } = route.params as { EntityId: number };
+  console.log(EntityId);
   const navigation = useNavigation<AppNavigatorRoutesProps>();
 
   const [types, setTypes] = useState<typesDTO[]>([]);
@@ -119,7 +123,7 @@ export function CreateReimbusementItem() {
               Data: formattedDate,
               Descricao: data.description,
               Quantidade: 1,
-              ReembolsoId: 10004,
+              ReembolsoId: EntityId,
               ReembolsoItemTipoId: data.type,
               ValorSolicitado: data.value,
               ValorVigenciaAtual: 100,
@@ -127,11 +131,9 @@ export function CreateReimbusementItem() {
           },
         };
 
-        const {
-          data: { Entity },
-        } = await api("/Services/Default/ReembolsoItem/Create", settings);
-        console.log(Entity);
-        navigation.goBack();
+        await api("/Services/Default/ReembolsoItem/Create", settings);
+
+        navigation.navigate("addReimbusementItem", { EntityId: EntityId });
       } catch (err) {
         //@ts-ignore
         console.log(err.response);

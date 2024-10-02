@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FlatList } from "react-native";
-import { Text, VStack } from "@gluestack-ui/themed";
+import { Text, View, VStack } from "@gluestack-ui/themed";
 
 import { api } from "@services/api";
 
@@ -12,16 +12,14 @@ import { ReimbusementCard } from "@components/ReimbusementCard";
 
 export function Home() {
   const [reimbusements, setReimbusements] = useState<reimbusementDTO[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
   async function getReimbusements() {
     try {
       const settings = {
         method: "post",
         headers: {
-          "Content-Type": "application/json",
-        },
-        data: {
-          IncludeColumns: ["ReembolsoItemList"],
+          "Content-Type": "application/json; chatset=utf-8",
         },
       };
 
@@ -30,8 +28,8 @@ export function Home() {
       } = await api("/Services/Default/Reembolso/List", settings);
 
       setReimbusements(Entities);
-    } catch (err) {
-      console.log("Erro ao buscar as empresas.");
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -39,23 +37,39 @@ export function Home() {
     getReimbusements();
   }, []);
 
+  const filteredReimbusements = reimbusements.filter((reimbusement) => {
+    if (!selectedFilter) return true;
+    if (selectedFilter === "Simples" && reimbusement.Tipo === 0) return true;
+    if (selectedFilter === "Viagem" && reimbusement.Tipo === 1) return true;
+    return false;
+  });
+
   return (
     <VStack flex={1} p={"$12"} bg={"$gray500"}>
       <Header title={"Bem-vindo(a)"} home={true} />
 
-      <Filters />
+      <Filters
+        selectedFilter={selectedFilter}
+        setSelectedFilter={setSelectedFilter}
+      />
 
       <FlatList
-        data={reimbusements}
+        data={filteredReimbusements}
         keyExtractor={(item) => String(item.Id)}
-        horizontal
         showsHorizontalScrollIndicator={false}
-        style={{ marginTop: 16, marginBottom: 32 }}
+        style={{ marginTop: 32, marginBottom: 32 }}
         renderItem={({ item }: { item: reimbusementDTO }) => (
           <ReimbusementCard data={item} />
         )}
         ListEmptyComponent={() => (
-          <Text color={"$gray300"}>Nenhuma empresa encontrada.</Text>
+          <View
+            flex={1}
+            alignItems={"center"}
+            justifyContent={"center"}
+            ml={"$12"}
+          >
+            <Text color={"$gray300"}>Nenhum reembolso encontrado.</Text>
+          </View>
         )}
       />
 
