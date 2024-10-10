@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { FlatList } from "react-native";
+import { FlatList, ScrollView } from "react-native";
 import { Text, View, VStack } from "@gluestack-ui/themed";
-
+import { StatusFilter } from "@components/StatusFilter";
 import { api } from "@services/api";
-
 import { Header } from "@components/Header";
 import { Filters } from "@components/Filters";
 import { PlusButton } from "@components/PlusButton";
@@ -13,13 +12,17 @@ import { ReimbusementCard } from "@components/ReimbusementCard";
 export function Home() {
   const [reimbusements, setReimbusements] = useState<reimbusementDTO[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<number | null>(null);
 
   async function getReimbusements() {
     try {
       const settings = {
         method: "post",
         headers: {
-          "Content-Type": "application/json; chatset=utf-8",
+          "Content-Type": "application/json; charset=utf-8",
+        },
+        data: {
+          IncludeColumns: ["ReembolsoItemList"],
         },
       };
 
@@ -38,10 +41,19 @@ export function Home() {
   }, []);
 
   const filteredReimbusements = reimbusements.filter((reimbusement) => {
-    if (!selectedFilter) return true;
-    if (selectedFilter === "Simples" && reimbusement.Tipo === 0) return true;
-    if (selectedFilter === "Viagem" && reimbusement.Tipo === 1) return true;
-    return false;
+    const filterByType =
+      !selectedFilter ||
+      (selectedFilter === "Simples" && reimbusement.Tipo === 0) ||
+      (selectedFilter === "Viagem" && reimbusement.Tipo === 1);
+
+    const filterByStatus =
+      selectedStatus === null ||
+      (selectedStatus === 0 && reimbusement.Status === 0) ||
+      (selectedStatus === 1 && reimbusement.Status === 1) ||
+      (selectedStatus === 2 && reimbusement.Status === 2) ||
+      (selectedStatus === 3 && reimbusement.Status === 3);
+
+    return filterByType && filterByStatus;
   });
 
   return (
@@ -53,11 +65,30 @@ export function Home() {
         setSelectedFilter={setSelectedFilter}
       />
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{
+          marginTop: 16,
+          height: 64,
+          paddingVertical: 4,
+        }}
+      >
+        <StatusFilter
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+        />
+      </ScrollView>
+
       <FlatList
         data={filteredReimbusements}
         keyExtractor={(item) => String(item.Id)}
-        showsHorizontalScrollIndicator={false}
-        style={{ marginTop: 32, marginBottom: 32 }}
+        showsVerticalScrollIndicator={false}
+        style={{
+          marginTop: 16,
+          marginBottom: 32,
+          height: "70%",
+        }}
         renderItem={({ item }: { item: reimbusementDTO }) => (
           <ReimbusementCard data={item} />
         )}
@@ -66,9 +97,11 @@ export function Home() {
             flex={1}
             alignItems={"center"}
             justifyContent={"center"}
-            ml={"$12"}
+            mt={"$12"}
           >
-            <Text color={"$gray300"}>Nenhum reembolso encontrado.</Text>
+            <Text color={"$gray300"} fontSize={"$xl"} textAlign={"center"}>
+              Nenhum reembolso encontrado.
+            </Text>
           </View>
         )}
       />

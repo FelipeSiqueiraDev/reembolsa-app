@@ -7,12 +7,14 @@ import { CreateReimbusement } from "@screens/CreateReimbusement";
 import { CreateReimbusementItem } from "@screens/CreateReimbusementItem";
 
 import { Home } from "@screens/Home";
+import { ReimbusementDetails } from "@screens/ReimbusementDetails";
 
 type AppRoutes = {
   home: undefined;
   createReimbusement: undefined;
   addReimbusementItem: { EntityId: number };
   createReimbusementItem: { EntityId: number };
+  reimbusementDetails: { EntityId: number };
 };
 
 export type AppNavigatorRoutesProps = BottomTabNavigationProp<AppRoutes>;
@@ -54,6 +56,14 @@ export function AppRoutes() {
       <Screen
         name={"createReimbusementItem"}
         component={CreateReimbusementItem}
+        options={{
+          tabBarStyle: { display: "none" },
+        }}
+      />
+
+      <Screen
+        name={"reimbusementDetails"}
+        component={ReimbusementDetails}
         options={{
           tabBarStyle: { display: "none" },
         }}

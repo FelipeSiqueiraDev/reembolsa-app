@@ -3,15 +3,18 @@ import { reimbusementDTO } from "@dtos/reimbusementDTO";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "@gluestack-ui/themed";
 
+import { useNavigation } from "@react-navigation/native";
+import { AppNavigatorRoutesProps } from "@routes/app.routes";
+
 type ReimbusementCardProps = {
   data: reimbusementDTO;
 };
-
 export function ReimbusementCard({ data }: ReimbusementCardProps) {
+  const navigation = useNavigation<AppNavigatorRoutesProps>();
+
   const reimbursementAmount = () => {
-    if (!data.ReembolsoItemList || data.ReembolsoItemList.length === 0)
-      return "0,00";
-    return data.ReembolsoItemList.reduce(
+    if (data.ReembolsoItemList?.length === 0) return "0,00";
+    return data.ReembolsoItemList?.reduce(
       (amount, item) => amount + item.ValorSolicitado,
       0
     )
@@ -27,16 +30,38 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
       px={"$4"}
       my={"$2"}
       rounded={"$lg"}
-      onPress={() => console.log("CLICK NO PRODUTO")}
+      onPress={() =>
+        navigation.navigate("reimbusementDetails", { EntityId: data.Id })
+      }
     >
       <View
         h={"$full"}
         w={"$2"}
-        bg={"$cyan500"}
+        bg={data.Tipo === 0 ? "$red500" : "$cyan500"}
         position="absolute"
         top={0}
         left={0}
         mr={"$12"}
+      />
+
+      <View
+        w={"$2"}
+        h={"$2"}
+        bg={
+          data.Status === 0
+            ? "$yellow500"
+            : data.Status === 1
+            ? "$blue500"
+            : data.Status === 2
+            ? "$green500"
+            : data.Status === 3
+            ? "$red500"
+            : "$gray500"
+        }
+        rounded={"$full"}
+        position={"absolute"}
+        top={"$5"}
+        right={"$5"}
       />
 
       <HStack alignItems={"center"} mt={"$1"}>

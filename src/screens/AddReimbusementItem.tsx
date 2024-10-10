@@ -23,6 +23,10 @@ export function AddReimbusementItem() {
     ReembusementItem[]
   >([]);
 
+  const refreshReimbusementItems = () => {
+    loadReimbusementItems();
+  };
+
   async function loadReimbusementItems() {
     try {
       const settings = {
@@ -30,13 +34,14 @@ export function AddReimbusementItem() {
         headers: {
           "Content-Type": "application/json; chatset=utf-8",
         },
-        EqualityFilter: { ReembolsoId: EntityId },
+        data: {
+          EqualityFilter: { ReembolsoId: EntityId },
+        },
       };
 
       const {
         data: { Entities },
       } = await api("/Services/Default/ReembolsoItem/List", settings);
-      console.log(Entities);
       setReimbusementItems(Entities);
     } catch (error) {
       console.log(error);
@@ -49,39 +54,47 @@ export function AddReimbusementItem() {
 
   return (
     <KeyboardAvoidingView flex={1} px={"$12"} py={"$4"} bg={"$gray500"}>
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-        <Header title={"Despesas"} />
+      <Header
+        title={"Despesas"}
+        navigate={() =>
+          navigation.navigate("reimbusementDetails", { EntityId: EntityId })
+        }
+        itemList={true}
+      />
 
-        <Button
-          title={"Adicionar nova despesa"}
-          mt={"$2"}
-          onPress={() =>
-            navigation.navigate("createReimbusementItem", {
-              EntityId: EntityId,
-            })
-          }
-        />
-
-        <FlatList
-          data={reimbusementItems}
-          keyExtractor={(item) => String(item.Id)}
-          showsHorizontalScrollIndicator={false}
-          style={{ marginTop: 32, marginBottom: 32 }}
-          renderItem={({ item }: { item: ReembusementItem }) => (
-            <ReimbusementItemCard data={item} />
-          )}
-          ListEmptyComponent={() => (
-            <View
-              flex={1}
-              alignItems={"center"}
-              justifyContent={"center"}
-              ml={"$12"}
-            >
-              <Text color={"$gray300"}>Nenhum reembolso encontrado.</Text>
-            </View>
-          )}
-        />
-      </ScrollView>
+      <Button
+        title={"Adicionar nova despesa"}
+        mt={"$2"}
+        onPress={() =>
+          navigation.navigate("createReimbusementItem", {
+            EntityId: EntityId,
+          })
+        }
+      />
+      <FlatList
+        data={reimbusementItems}
+        keyExtractor={(item) => String(item.Id)}
+        showsHorizontalScrollIndicator={false}
+        style={{ marginTop: 32, marginBottom: 32 }}
+        renderItem={({ item }: { item: ReembusementItem }) => (
+          <ReimbusementItemCard
+            data={item}
+            onDelete={refreshReimbusementItems}
+          />
+        )}
+        ListEmptyComponent={() => (
+          <View
+            flex={1}
+            alignItems={"center"}
+            justifyContent={"center"}
+            mt={"$12"}
+          >
+            <Text color={"$gray300"} fontSize={"$xl"} textAlign={"center"}>
+              Nenhum reembolso encontrado.
+            </Text>
+          </View>
+        )}
+      />
     </KeyboardAvoidingView>
   );
 }

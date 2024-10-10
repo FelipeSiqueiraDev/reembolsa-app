@@ -1,18 +1,18 @@
 export type reimbusementDTO = {
-  CentroCustoId: number;
-  Cpf: string;
-  Destino: boolean;
-  EmpresaId: number;
   Id: number;
-  InsertDate: string;
-  InsertUserId: number;
-  Motivo: string;
-  Nome: string;
-  Origem: boolean;
-  ReembolsoItemList?: ReembolsoItem[];
-  Status: number;
-  Telefone: string;
   Tipo: number;
+  EmpresaId: number;
+  CentroCustoId: number;
+  Status: number;
+  Nome: string;
+  Cpf: string;
+  Telefone: string;
+  Origem: boolean;
+  Destino: boolean;
+  Motivo: string;
+  ReembolsoItemList?: ReembolsoItem[];
+  InsertUserId: number;
+  InsertDate: string;
 };
 
 type ReembolsoItem = {

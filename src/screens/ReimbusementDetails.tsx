@@ -1,12 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   Text,
   HStack,
   VStack,
   ScrollView,
   KeyboardAvoidingView,
+  Pressable,
 } from "@gluestack-ui/themed";
-import debounce from "lodash/debounce";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -14,6 +14,7 @@ import * as yup from "yup";
 import { Picker } from "@react-native-picker/picker";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
+import { useRoute } from "@react-navigation/native";
 
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigatorRoutesProps } from "@routes/app.routes";
@@ -27,6 +28,7 @@ import { api } from "@services/api";
 
 import { departamentDTO } from "@dtos/departamentDTO";
 import { companiesDTO } from "@dtos/companiesDTO";
+import { Alert } from "react-native";
 
 const ReimbusementSchema = yup.object({
   cpf: yup.string().required("CPF é obrigatório"),
@@ -48,7 +50,9 @@ type ReimbusementProps = {
   destination?: string;
 };
 
-export function CreateReimbusement() {
+export function ReimbusementDetails() {
+  const route = useRoute();
+  const { EntityId } = route.params as { EntityId: number };
   const navigation = useNavigation<AppNavigatorRoutesProps>();
 
   const [selectedType, setSelectedType] = useState<string>("");
@@ -63,16 +67,7 @@ export function CreateReimbusement() {
     formState: { errors },
   } = useForm<ReimbusementProps>({ resolver: yupResolver(ReimbusementSchema) });
 
-  const debouncedGetUserInfo = useCallback(
-    debounce((cpf: string) => {
-      if (cpf.length === 14) {
-        getUserInfo(cpf);
-      }
-    }, 500),
-    []
-  );
-
-  async function getUserInfo(cpf: string) {
+  async function getReimbusementDetails() {
     try {
       const settings = {
         method: "post",
@@ -80,23 +75,83 @@ export function CreateReimbusement() {
           "Content-Type": "application/json",
         },
         data: {
-          Cpf: cpf,
+          EntityId: EntityId,
         },
       };
 
       const {
         data: { Entity },
-      } = await api("/Services/Default/Reembolso/VerificarPessoa", settings);
+      } = await api("/services/Default/Reembolso/Retrieve", settings);
 
+      await getSelectedCompany();
+
+      setValue("cpf", Entity.Cpf);
       setValue("name", Entity.Nome);
       setValue("phoneNumber", Entity.Telefone);
+      setValue("company", Entity.EmpresaId);
+
+      await getSelectedSection(Entity.EmpresaId);
+
+      setValue("departament", Entity.CentroCustoId);
+
+      setValue("reason", Entity.Motivo);
+      setSelectedType(Entity.Tipo === "Viagem" ? "Viagem" : "Simples");
+
+      if (Entity.Tipo === 0) {
+        setSelectedType("Simples");
+      } else if (Entity.Tipo === 1) {
+        setSelectedType("Viagem");
+
+        setTimeout(() => {
+          setValue("origin", Entity.Origem);
+          setValue("destination", Entity.Destino);
+        }, 0);
+      }
     } catch (err) {
       //@ts-ignore
       console.log(err.response);
     }
   }
 
-  async function getCompanies() {
+  async function handleApprove() {
+    try {
+      const settings = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json; chatset=utf-8",
+        },
+        data: {
+          EntityId: EntityId,
+        },
+      };
+
+      await api("/Services/Default/Reembolso/EnviarAprovacao", settings);
+      navigation.navigate("home");
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function handleDelete() {
+    try {
+      const settings = {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json; chatset=utf-8",
+        },
+        data: {
+          EntityId: EntityId,
+        },
+      };
+
+      await api("/Services/Default/Reembolso/Delete", settings);
+      navigation.navigate("home");
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async function getSelectedCompany() {
     try {
       const settings = {
         method: "post",
@@ -109,12 +164,13 @@ export function CreateReimbusement() {
         data: { Entities },
       } = await api("/Services/Default/Empresa/List", settings);
       setCompanies(Entities);
+      await getSelectedSection(Entities);
     } catch (err) {
       console.log("Erro ao buscar as empresas.");
     }
   }
 
-  async function getSections(companyId: string) {
+  async function getSelectedSection(EmpresaId: number) {
     try {
       const settings = {
         method: "post",
@@ -123,72 +179,83 @@ export function CreateReimbusement() {
         },
         data: {
           EqualityFilter: {
-            EmpresaId: Number(companyId),
+            EmpresaId: EmpresaId,
           },
         },
       };
+
       const {
         data: { Entities },
       } = await api("/Services/Default/CentroCusto/List", settings);
       setDepartaments(Entities);
     } catch (err) {
-      console.log("Erro ao buscar as departaments.");
+      //console.log("Erro ao buscar as departamentos.");
     }
   }
 
-  async function sendReimbusementRequest(data: ReimbusementProps) {
-    const reimbusementData = {
-      Nome: data.name,
-      Cpf: data.cpf,
-      Telefone: data.phoneNumber,
-      Motivo: data.reason,
-      EmpresaId: data.company,
-      CentroCustoId: data.departament,
-      Tipo: selectedType === "Viagem" ? 1 : 0,
-      Origem: selectedType === "Viagem" && data.origin,
-      Destino: selectedType === "Viagem" && data.destination,
-    };
-
-    try {
-      const settings = {
-        method: "post",
-        headers: {
-          "Content-Type": "application/json",
+  function openAlert() {
+    Alert.alert(
+      "Cancelar solicitação",
+      "Cancelar a solicitação significa retira-la completamente da lista de aprovação junto a suas despesas\nDeseja continuar?",
+      [
+        {
+          text: "Não",
+          style: "cancel",
         },
-        data: {
-          Entity: reimbusementData,
-        },
-      };
-
-      const { data } = await api(
-        "/Services/Default/Reembolso/Create",
-        settings
-      );
-
-      navigation.navigate("addReimbusementItem", data);
-    } catch (err) {
-      //@ts-ignore
-      console.log(err.response);
-    }
+        { text: "Sim", onPress: () => handleDelete() },
+      ]
+    );
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      await getCompanies();
-      if (selectedCompany) {
-        await getSections(selectedCompany);
-      }
-    };
-    fetchData();
-  }, [selectedCompany]);
+    getReimbusementDetails();
+  }, []);
 
   return (
     <KeyboardAvoidingView flex={1} px={"$12"} py={"$4"} bg={"$gray500"}>
-      <ScrollView flex={1} showsVerticalScrollIndicator={false}>
+      <ScrollView mt={"$12"} flex={1} showsVerticalScrollIndicator={false}>
         <Header
-          title={"Criar novo Reembolso"}
+          title={"Detalhes do Reembolso"}
+          details={true}
+          detailsId={EntityId}
           navigate={() => navigation.navigate("home")}
         />
+        <HStack
+          w={"$full"}
+          justifyContent={"space-around"}
+          my={"$2"}
+          borderBottomWidth={"$2"}
+          borderBottomColor={"$gray300"}
+          pb={"$2"}
+        >
+          <Pressable
+            bg={"$blue500"}
+            w={"$33"}
+            h={"$14"}
+            rounded={"$xl"}
+            alignItems={"center"}
+            justifyContent={"center"}
+            onPress={handleApprove}
+          >
+            <Text color={"$white"} textAlign={"center"}>
+              Enviar para aprovação
+            </Text>
+          </Pressable>
+          <Pressable
+            bg={"$red500"}
+            px={"$2"}
+            w={"$33"}
+            h={"$14"}
+            rounded={"$xl"}
+            alignItems={"center"}
+            justifyContent={"center"}
+            onPress={openAlert}
+          >
+            <Text color={"$white"} textAlign={"center"}>
+              Cancelar solicitação
+            </Text>
+          </Pressable>
+        </HStack>
 
         {/* Tipo de Reembolso */}
         <VStack
@@ -207,12 +274,10 @@ export function CreateReimbusement() {
             <FilterButton
               name={"Simples"}
               isActive={selectedType === "Simples"}
-              onPress={() => setSelectedType("Simples")}
             />
             <FilterButton
               name={"Viagem"}
               isActive={selectedType === "Viagem"}
-              onPress={() => setSelectedType("Viagem")}
             />
           </HStack>
         </VStack>
@@ -229,7 +294,11 @@ export function CreateReimbusement() {
               Dados Pessoais
             </Text>
           </HStack>
-          <VStack>
+          <VStack
+            borderBottomColor={"$gray300"}
+            borderBottomWidth={"$2"}
+            pb={"$4"}
+          >
             <Controller
               control={control}
               name={"cpf"}
@@ -243,10 +312,8 @@ export function CreateReimbusement() {
                     editStyle={"cpf"}
                     placeholder="CPF"
                     keyboardType="numeric"
-                    onChangeText={(itemValue) => {
-                      onChange(itemValue);
-                      debouncedGetUserInfo(itemValue);
-                    }}
+                    onChangeText={onChange}
+                    editable={false}
                     errorMessage={errors.cpf?.message}
                   />
                 </>
@@ -265,6 +332,7 @@ export function CreateReimbusement() {
                     placeholder="Nome Completo"
                     keyboardType="default"
                     value={value}
+                    editable={false}
                     onChangeText={onChange}
                     errorMessage={errors.name?.message}
                   />
@@ -283,6 +351,7 @@ export function CreateReimbusement() {
                   <Input
                     placeholder="Telefone"
                     keyboardType="numeric"
+                    editable={false}
                     value={value}
                     onChangeText={onChange}
                     errorMessage={errors.phoneNumber?.message}
@@ -381,95 +450,67 @@ export function CreateReimbusement() {
               )}
             />
           </VStack>
-        </VStack>
-
-        {/* Detalhes */}
-        <VStack
-          borderBottomColor={"$gray300"}
-          borderBottomWidth={"$2"}
-          pb={"$4"}
-        >
-          <HStack p={"$4"} mb={"$2"}>
-            <Ionicons name={"newspaper-outline"} size={24} color={"#7C7C8A"} />
-            <Text color={"$gray300"} ml={"$4"} fontSize={"$lg"}>
-              Detalhes
-            </Text>
-          </HStack>
-          <VStack>
-            <Controller
-              control={control}
-              name={"reason"}
-              render={({ field: { onChange, value } }) => (
-                <>
-                  <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
-                    Motivo
-                  </Text>
-                  <Input
-                    placeholder="Motivo"
-                    keyboardType="default"
-                    value={value}
-                    onChangeText={onChange}
-                    errorMessage={errors.reason?.message}
-                  />
-                </>
-              )}
-            />
-          </VStack>
-        </VStack>
-
-        {/* VIAGEM */}
-        {selectedType === "Viagem" && (
-          <VStack pb={"$4"}>
-            <HStack p={"$4"} mb={"$2"}>
-              <Ionicons name={"airplane-outline"} size={24} color={"#7C7C8A"} />
-              <Text color={"$gray300"} ml={"$4"} fontSize={"$lg"}>
-                Viagem
-              </Text>
-            </HStack>
-            <VStack>
-              <Controller
-                control={control}
-                name={"origin"}
-                render={({ field: { onChange, value } }) => (
-                  <>
-                    <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
-                      Origem
-                    </Text>
-                    <Input
-                      placeholder="Origem"
-                      keyboardType="default"
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  </>
-                )}
-              />
-              <Controller
-                control={control}
-                name={"destination"}
-                render={({ field: { onChange, value } }) => (
-                  <>
-                    <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
-                      Destino
-                    </Text>
-                    <Input
-                      placeholder="Destino"
-                      keyboardType="default"
-                      value={value}
-                      onChangeText={onChange}
-                    />
-                  </>
-                )}
-              />
+          {selectedType === "Viagem" && (
+            <VStack pb={"$4"}>
+              <HStack p={"$4"} mb={"$2"}>
+                <Ionicons
+                  name={"airplane-outline"}
+                  size={24}
+                  color={"#7C7C8A"}
+                />
+                <Text color={"$gray300"} ml={"$4"} fontSize={"$lg"}>
+                  Viagem
+                </Text>
+              </HStack>
+              <VStack>
+                <Controller
+                  control={control}
+                  name={"origin"}
+                  render={({ field: { onChange, value } }) => (
+                    <>
+                      <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
+                        Origem
+                      </Text>
+                      <Input
+                        placeholder="Origem"
+                        keyboardType="default"
+                        editable={false}
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    </>
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name={"destination"}
+                  render={({ field: { onChange, value } }) => (
+                    <>
+                      <Text ml={"$2"} mb={"$1"} color={"$gray200"}>
+                        Destino
+                      </Text>
+                      <Input
+                        placeholder="Destino"
+                        keyboardType="default"
+                        editable={false}
+                        value={value}
+                        onChangeText={onChange}
+                      />
+                    </>
+                  )}
+                />
+              </VStack>
             </VStack>
-          </VStack>
-        )}
-
-        <Button
-          title={"Enviar"}
-          onPress={handleSubmit(sendReimbusementRequest)}
-        />
+          )}
+        </VStack>
       </ScrollView>
+
+      <Button
+        title="Ver despesas"
+        onPress={() =>
+          navigation.navigate("addReimbusementItem", { EntityId: EntityId })
+        }
+      />
     </KeyboardAvoidingView>
   );
 }

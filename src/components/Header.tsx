@@ -1,24 +1,34 @@
 import { useEffect, useState } from "react";
-import { VStack, Heading, Text, HStack } from "@gluestack-ui/themed";
-
+import { VStack, Heading, Text, HStack, Button } from "@gluestack-ui/themed";
+import { Modal, View } from "react-native"; // Importação do Modal do React Native
 import { getUserCredentials } from "@storage/user/getUser.credentials";
-
 import { useNavigation } from "@react-navigation/native";
 import { AppNavigatorRoutesProps } from "@routes/app.routes";
-
 import { useAuth } from "@hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
+import { api } from "@services/api";
 
 type Props = {
   title: string;
   home?: boolean;
+  details?: boolean;
+  itemList?: boolean;
+  detailsId?: number;
+  navigate?: () => void;
 };
 
-export function Header({ title, home = false }: Props) {
+export function Header({
+  title,
+  home = false,
+  details = false,
+  itemList = false,
+  detailsId,
+  navigate,
+}: Props) {
   const navigation = useNavigation<AppNavigatorRoutesProps>();
-
   const { logout } = useAuth();
   const [user, setUser] = useState<string>();
+  const [modalVisible, setModalVisible] = useState(false);
 
   async function getUserInfo() {
     const user = await getUserCredentials();
@@ -27,7 +37,7 @@ export function Header({ title, home = false }: Props) {
 
   useEffect(() => {
     getUserInfo();
-  });
+  }, []);
 
   return (
     <HStack
@@ -45,7 +55,7 @@ export function Header({ title, home = false }: Props) {
           size={32}
           mr={"$12"}
           color={"white"}
-          onPress={() => navigation.goBack()}
+          onPress={navigate}
         />
       )}
 
@@ -62,6 +72,15 @@ export function Header({ title, home = false }: Props) {
           size={32}
           color={"white"}
           onPress={logout}
+        />
+      )}
+
+      {itemList && (
+        <Ionicons
+          name={"home-outline"}
+          size={24}
+          color={"white"}
+          onPress={() => navigation.navigate("home")}
         />
       )}
     </HStack>

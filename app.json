@@ -18,7 +18,11 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#29292E"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.tisistemasfarid.reembolsaapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +35,11 @@
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "28003859-040e-4121-a77d-573ccbd7caea"
+      }
+    }
   }
 }

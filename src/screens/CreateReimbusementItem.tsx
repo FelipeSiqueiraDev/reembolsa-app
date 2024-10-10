@@ -46,7 +46,6 @@ type ReimbusementItemProps = {
 export function CreateReimbusementItem() {
   const route = useRoute();
   const { EntityId } = route.params as { EntityId: number };
-  console.log(EntityId);
   const navigation = useNavigation<AppNavigatorRoutesProps>();
 
   const [types, setTypes] = useState<typesDTO[]>([]);
@@ -104,6 +103,75 @@ export function CreateReimbusementItem() {
       return;
     }
 
+    const selectedTypeData = types.find((type) => type.Id === data.type);
+
+    if (!selectedTypeData) {
+      Alert.alert("Tipo selecionado inválido!");
+      return;
+    }
+
+    const formValue = parseFloat(data.value);
+    const valorPolitica = selectedTypeData.ValorPolitica;
+
+    if (formValue > valorPolitica) {
+      Alert.alert(
+        "AVISO!!",
+        `O valor solicitado para reembolso excede o limite da política.\nReembolso acima do valor da política requer aprovação especial.\nDeseja mesmo continuar?`,
+        [
+          {
+            text: "Não",
+            onPress: () => {
+              console.log("Ação cancelada");
+              return;
+            },
+            style: "cancel",
+          },
+          {
+            text: "Sim",
+            onPress: async () => {
+              // Continua a função normalmente após a confirmação
+              try {
+                const imageUploaded = await temporaryUpload(image.uri);
+
+                function formatDateToISO(date: string): string {
+                  const [day, month, year] = date.split("/");
+                  return `${year}-${month}-${day}`;
+                }
+
+                const formattedDate = formatDateToISO(data.date);
+
+                const settings = {
+                  method: "post",
+                  data: {
+                    Entity: {
+                      AnexoPath: JSON.stringify([{ Filename: imageUploaded }]),
+                      Data: formattedDate,
+                      Descricao: data.description,
+                      Quantidade: 1,
+                      ReembolsoId: EntityId,
+                      ReembolsoItemTipoId: data.type,
+                      ValorSolicitado: data.value,
+                      ValorVigenciaAtual: 100,
+                    },
+                  },
+                };
+
+                await api("/Services/Default/ReembolsoItem/Create", settings);
+
+                navigation.navigate("addReimbusementItem", {
+                  EntityId: EntityId,
+                });
+              } catch (err) {
+                //@ts-ignore
+                console.log(err.response);
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
     try {
       const imageUploaded = await temporaryUpload(image.uri);
 
@@ -114,36 +182,33 @@ export function CreateReimbusementItem() {
 
       const formattedDate = formatDateToISO(data.date);
 
-      try {
-        const settings = {
-          method: "post",
-          data: {
-            Entity: {
-              AnexoPath: JSON.stringify([{ Filename: imageUploaded }]),
-              Data: formattedDate,
-              Descricao: data.description,
-              Quantidade: 1,
-              ReembolsoId: EntityId,
-              ReembolsoItemTipoId: data.type,
-              ValorSolicitado: data.value,
-              ValorVigenciaAtual: 100,
-            },
+      const settings = {
+        method: "post",
+        data: {
+          Entity: {
+            AnexoPath: JSON.stringify([{ Filename: imageUploaded }]),
+            Data: formattedDate,
+            Descricao: data.description,
+            Quantidade: 1,
+            ReembolsoId: EntityId,
+            ReembolsoItemTipoId: data.type,
+            ValorSolicitado: data.value,
+            ValorVigenciaAtual: 100,
           },
-        };
+        },
+      };
 
-        await api("/Services/Default/ReembolsoItem/Create", settings);
+      await api("/Services/Default/ReembolsoItem/Create", settings);
 
-        navigation.navigate("addReimbusementItem", { EntityId: EntityId });
-      } catch (err) {
-        //@ts-ignore
-        console.log(err.response);
-        return;
-      }
+      navigation.navigate("addReimbusementItem", { EntityId: EntityId });
     } catch (err) {
-      console.log("Erro ao criar o item.");
       //@ts-ignore
       console.log(err.response);
     }
+  }
+
+  function handleNavigation() {
+    navigation.navigate("home");
   }
 
   useEffect(() => {
@@ -153,7 +218,7 @@ export function CreateReimbusementItem() {
   return (
     <KeyboardAvoidingView flex={1} px={"$12"} py={"$4"} bg={"$gray500"}>
       <ScrollView flex={1} showsVerticalScrollIndicator={false}>
-        <Header title={"Criar despesa"} />
+        <Header title={"Criar despesa"} navigate={handleNavigation} />
 
         <VStack pb={"$4"} mt={"$6"}>
           <VStack>
