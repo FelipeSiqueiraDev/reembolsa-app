@@ -1,6 +1,6 @@
 import { Heading, HStack, Pressable, View, VStack } from "@gluestack-ui/themed";
 import { reimbusementDTO } from "@dtos/reimbusementDTO";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, AntDesign } from "@expo/vector-icons";
 import { Text } from "@gluestack-ui/themed";
 
 import { useNavigation } from "@react-navigation/native";
@@ -25,7 +25,7 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
   return (
     <Pressable
       w={"$full"}
-      h={"$32"}
+      h={"$33"}
       bg={"$gray400"}
       px={"$4"}
       my={"$2"}
@@ -37,7 +37,7 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
       <View
         h={"$full"}
         w={"$2"}
-        bg={data.Tipo === 0 ? "$red500" : "$cyan500"}
+        bg={data.Tipo === 0 ? "$teal500" : "$cyan500"}
         position="absolute"
         top={0}
         left={0}
@@ -75,6 +75,23 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
         </Heading>
       </HStack>
 
+      {data.Tipo === 1 && (
+        <HStack alignItems="center">
+          <Text color={"$gray300"} fontSize={"$sm"} marginLeft={"$8"}>
+            {data.Origem}
+          </Text>
+          <AntDesign
+            name={"swap"}
+            size={14}
+            style={{ marginHorizontal: 4 }}
+            color={"#C4C4CC"}
+          />
+          <Text color={"$gray300"} fontSize={"$sm"}>
+            {data.Destino}
+          </Text>
+        </HStack>
+      )}
+
       <HStack
         mt={"$8"}
         borderBottomWidth={"$1"}
@@ -83,16 +100,16 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
         w={"$72"}
         justifyContent={"space-between"}
       >
-        <Text color={"$gray300"}>R$: {reimbursementAmount()}</Text>
-
         <HStack alignItems={"center"}>
           <Ionicons name={"link"} size={18} color={"#C4C4CC"} />
           <Text color={"$gray300"} ml={"$1"} fontWeight={"$black"}>
             {data.ReembolsoItemList?.length || 0}
           </Text>
         </HStack>
+        <Text color={"$#C4C4C4"}>R$: {reimbursementAmount()}</Text>
       </HStack>
-      <Text fontSize={"$sm"} marginTop={"$2.5"}>
+
+      <Text fontSize={"$sm"} marginTop={"$2.5"} color={"#C4C4C4"}>
         Criado em {new Date(data.InsertDate).toLocaleDateString("pt-br")}
       </Text>
     </Pressable>

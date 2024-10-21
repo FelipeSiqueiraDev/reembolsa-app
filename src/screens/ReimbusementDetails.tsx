@@ -59,6 +59,7 @@ export function ReimbusementDetails() {
   const [companies, setCompanies] = useState<companiesDTO[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const [departaments, setDepartaments] = useState<departamentDTO[]>([]);
+  const [sendReimbusement, setSendReimbusement] = useState(true);
 
   const {
     control,
@@ -82,6 +83,10 @@ export function ReimbusementDetails() {
       const {
         data: { Entity },
       } = await api("/services/Default/Reembolso/Retrieve", settings);
+
+      if (Entity.ReembolsoItemList.length > 0) {
+        setSendReimbusement(false);
+      }
 
       await getSelectedCompany();
 
@@ -229,15 +234,19 @@ export function ReimbusementDetails() {
           pb={"$2"}
         >
           <Pressable
-            bg={"$blue500"}
+            bg={sendReimbusement ? "$gray400" : "$green600"}
             w={"$33"}
             h={"$14"}
             rounded={"$xl"}
             alignItems={"center"}
             justifyContent={"center"}
             onPress={handleApprove}
+            disabled={sendReimbusement}
           >
-            <Text color={"$white"} textAlign={"center"}>
+            <Text
+              color={sendReimbusement ? "$gray300" : "$white"}
+              textAlign={"center"}
+            >
               Enviar para aprovação
             </Text>
           </Pressable>
