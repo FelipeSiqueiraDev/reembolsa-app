@@ -84,7 +84,9 @@ export function ReimbusementDetails() {
         data: { Entity },
       } = await api("/services/Default/Reembolso/Retrieve", settings);
 
-      if (Entity.ReembolsoItemList.length > 0) {
+      if (Entity.ReembolsoItemList.length === 0 || Entity.Status !== 0) {
+        setSendReimbusement(true);
+      } else {
         setSendReimbusement(false);
       }
 

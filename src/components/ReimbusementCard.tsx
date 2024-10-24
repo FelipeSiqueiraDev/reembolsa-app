@@ -93,7 +93,7 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
       )}
 
       <HStack
-        mt={"$8"}
+        mt={data.Tipo === 0 ? "$8" : "$4"}
         borderBottomWidth={"$1"}
         borderColor={"$gray300"}
         alignItems={"center"}
@@ -111,6 +111,30 @@ export function ReimbusementCard({ data }: ReimbusementCardProps) {
 
       <Text fontSize={"$sm"} marginTop={"$2.5"} color={"#C4C4C4"}>
         Criado em {new Date(data.InsertDate).toLocaleDateString("pt-br")}
+      </Text>
+      <Text
+        fontSize={"$sm"}
+        color={
+          data.Status === 0
+            ? "$yellow500"
+            : data.Status === 1
+            ? "$blue500"
+            : data.Status === 2
+            ? "$green500"
+            : data.Status === 3
+            ? "$red500"
+            : "$gray500"
+        }
+      >
+        {data.Status === 0
+          ? "Andamento"
+          : data.Status === 1
+          ? "Aguardando aprovação"
+          : data.Status === 2
+          ? "Aprovado"
+          : data.Status === 3
+          ? "Reprovado"
+          : ""}
       </Text>
     </Pressable>
   );

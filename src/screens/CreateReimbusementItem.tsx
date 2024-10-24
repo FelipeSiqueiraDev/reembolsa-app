@@ -208,7 +208,7 @@ export function CreateReimbusementItem() {
   }
 
   function handleNavigation() {
-    navigation.navigate("home");
+    navigation.navigate("addReimbusementItem", { EntityId: EntityId });
   }
 
   useEffect(() => {
@@ -242,7 +242,7 @@ export function CreateReimbusementItem() {
                       marginBottom: 20,
                     }}
                   >
-                    <Picker.Item label="Selecione uma empresa" value="" />
+                    <Picker.Item label="Selecione o tipo da despesa" value="" />
                     {Array.isArray(types) && types.length > 0 ? (
                       types.map((type) => (
                         <Picker.Item
@@ -252,10 +252,7 @@ export function CreateReimbusementItem() {
                         />
                       ))
                     ) : (
-                      <Picker.Item
-                        label="Nenhuma empresa disponível"
-                        value=""
-                      />
+                      <Picker.Item label="Nenhum tipo disponível" value="" />
                     )}
                   </Picker>
                   {errors.type && (
